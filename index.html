@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NevUp Backend API Tester</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f4; }
+        .container { max-width: 900px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        h1, h2 { color: #333; }
+        form div { margin-bottom: 10px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input[type="text"], input[type="password"], input[type="email"], input[type="date"] {
+            width: calc(100% - 22px);
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .response-box {
+            background-color: #e2e2e2;
+            padding: 15px;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            margin-top: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #ccc;
+        }
+        .section {
+            border-top: 1px solid #eee;
+            margin-top: 30px;
+            padding-top: 20px;
+        }
+        .error { color: red; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>NevUp Backend API Tester</h1>
+
+        <div class="section">
+            <h2>Authentication</h2>
+
+            <h3>Signup</h3>
+            <form id="signupForm">
+                <div>
+                    <label for="signupUsername">Username:</label>
+                    <input type="text" id="signupUsername" required>
+                </div>
+                <div>
+                    <label for="signupEmail">Email:</label>
+                    <input type="email" id="signupEmail" required>
+                </div>
+                <div>
+                    <label for="signupDateofBirth">Date of Birth:</label>
+                    <input type="date" id="signupDateofBirth" required>
+                </div>
+                <div>
+                    <label for="signupPassword">Password:</label>
+                    <input type="password" id="signupPassword" required>
+                </div>
+                <button type="submit">Signup</button>
+            </form>
+            <div id="signupResponse" class="response-box"></div>
+
+            <h3>Login (Get Token)</h3>
+            <form id="loginForm">
+                <div>
+                    <label for="loginUsername">Username:</label>
+                    <input type="text" id="loginUsername" required>
+                </div>
+                <div>
+                    <label for="loginPassword">Password:</label>
+                    <input type="password" id="loginPassword" required>
+                </div>
+                <button type="submit">Login</button>
+            </form>
+            <div id="loginResponse" class="response-box"></div>
+            <p><strong>Current Token:</strong> <span id="currentToken">None</span></p>
+
+            <h3>User Profile</h3>
+            <button id="getMe">Get My Profile</button>
+            <form id="updateMeForm">
+                <div>
+                    <label for="updateUsername">Update Username (optional):</label>
+                    <input type="text" id="updateUsername">
+                </div>
+                <div>
+                    <label for="updateEmail">Update Email (optional):</label>
+                    <input type="email" id="updateEmail">
+                </div>
+                <div>
+                    <label for="updateDateofBirth">Update Date of Birth (optional):</label>
+                    <input type="date" id="updateDateofBirth">
+                </div>
+                <div>
+                    <label for="updatePassword">Update Password (optional):</label>
+                    <input type="password" id="updatePassword">
+                </div>
+                <button type="submit">Update Profile</button>
+            </form>
+            <div id="meResponse" class="response-box"></div>
+
+            <h3>Change Password</h3>
+            <form id="changePasswordForm">
+                <div>
+                    <label for="oldPassword">Old Password:</label>
+                    <input type="password" id="oldPassword" required>
+                </div>
+                <div>
+                    <label for="newPassword">New Password:</label>
+                    <input type="password" id="newPassword" required>
+                </div>
+                <button type="submit">Change Password</button>
+            </form>
+            <div id="changePasswordResponse" class="response-box"></div>
+        </div>
+
+        <div class="section">
+            <h2>Binance Market Data</h2>
+            <h3>Public Data</h3>
+            <button id="getBinanceTime">Get Server Time</button>
+            <button id="getExchangeInfo">Get Exchange Info</button>
+            <div id="marketDataResponse" class="response-box"></div>
+
+            <h3>Ticker Data</h3>
+            <form id="getTickerForm">
+                <div>
+                    <label for="tickerSymbol">Symbol (e.g., BTC/USDT):</label>
+                    <input type="text" id="tickerSymbol" value="BTC/USDT" required>
+                </div>
+                <button type="submit">Get Ticker</button>
+            </form>
+            <div id="tickerResponse" class="response-box"></div>
+        </div>
+
+        <div class="section">
+            <h2>Binance Portfolio Integration</h2>
+            <h3>Manage API Credentials</h3>
+            <form id="createBinanceCredentialsForm">
+                <div>
+                    <label for="binanceApiKey">API Key:</label>
+                    <input type="text" id="binanceApiKey" required>
+                </div>
+                <div>
+                    <label for="binanceSecretKey">Secret Key:</label>
+                    <input type="password" id="binanceSecretKey" required>
+                </div>
+                <button type="submit">Save Credentials (POST)</button>
+            </form>
+            <form id="updateBinanceCredentialsForm">
+                <div>
+                    <label for="updateBinanceApiKey">API Key:</label>
+                    <input type="text" id="updateBinanceApiKey" required>
+                </div>
+                <div>
+                    <label for="updateBinanceSecretKey">Secret Key:</label>
+                    <input type="password" id="updateBinanceSecretKey" required>
+                </div>
+                <button type="submit">Update Credentials (PUT)</button>
+            </form>
+            <div id="binanceCredentialsResponse" class="response-box"></div>
+
+            <h3>Get Balance</h3>
+            <button id="getBinanceBalance">Get My Binance Balance</button>
+            <div id="binanceBalanceResponse" class="response-box"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = "http://localhost:8000";
+        let accessToken = localStorage.getItem('accessToken') || null;
+
+        document.getElementById('currentToken').textContent = accessToken ? accessToken : 'None';
+
+        function updateTokenDisplay(token) {
+            accessToken = token;
+            localStorage.setItem('accessToken', token);
+            document.getElementById('currentToken').textContent = token ? token : 'None';
+        }
+
+        async function callApi(method, path, body = null, authRequired = false, isFormData = false) {
+            const headers = {};
+            if (authRequired) {
+                if (!accessToken) {
+                    alert('Authentication required. Please log in first.');
+                    return;
+                }
+                headers['Authorization'] = `Bearer ${accessToken}`;
+            }
+
+            let options = { method, headers };
+
+            if (body && !isFormData) {
+                options.headers['Content-Type'] = 'application/json';
+                options.body = JSON.stringify(body);
+            } else if (body && isFormData) {
+                options.body = body; // For FormData, headers 'Content-Type' is set automatically by browser
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}${path}`, options);
+                const data = await response.json();
+                if (!response.ok) {
+                    throw new Error(data.detail || 'API Error');
+                }
+                return data;
+            } catch (error) {
+                console.error('API Call Error:', error);
+                alert(`API Error: ${error.message}`);
+                throw error;
+            }
+        }
+
+        // --- Authentication ---
+
+        document.getElementById('signupForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('signupUsername').value;
+            const email = document.getElementById('signupEmail').value;
+            const DateofBirth = document.getElementById('signupDateofBirth').value;
+            const password = document.getElementById('signupPassword').value;
+            try {
+                const response = await callApi('POST', '/auth/signup', { username, email, DateofBirth, password });
+                document.getElementById('signupResponse').textContent = JSON.stringify(response, null, 2);
+            } catch (error) {
+                document.getElementById('signupResponse').textContent = `Error: ${error.message}`;
+                document.getElementById('signupResponse').classList.add('error');
+            }
+        });
+
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('loginUsername').value;
+            const password = document.getElementById('loginPassword').value;
+
+            const formData = new URLSearchParams();
+            formData.append('username', username);
+            formData.append('password', password);
+
+            try {
+                const response = await callApi('POST', '/auth/token', formData, false, true); // isFormData = true
+                updateTokenDisplay(response.access_token);
+                document.getElementById('loginResponse').textContent = JSON.stringify(response, null, 2);
+            } catch (error) {
+                document.getElementById('loginResponse').textContent = `Error: ${error.message}`;
+                document.getElementById('loginResponse').classList.add('error');
+                updateTokenDisplay(null);
+            }
+        });
+
+        document.getElementById('getMe').addEventListener('click', async () => {
+            try {
+                const response = await callApi('GET', '/auth/me', null, true);
+                document.getElementById('meResponse').textContent = JSON.stringify(response, null, 2);
+            } catch (error) {
+                document.getElementById('meResponse').textContent = `Error: ${error.message}`;
+                document.getElementById('meResponse').classList.add('error');
+            }
+        });
+
+        document.getElementById('updateMeForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('updateUsername').value;
+            const email = document.getElementById('updateEmail').value;
+            const DateofBirth = document.getElementById('updateDateofBirth').value;
+            const password = document.getElementById('updatePassword').value;
+
+            const body = {};
+            if (username) body.username = username;
+            if (email) body.email = email;
+            if (DateofBirth) body.DateofBirth = DateofBirth;
+            if (password) body.password = password;
+
+            try {
+                const response = await callApi('PUT', '/auth/me', body, true);
+                document.getElementById('meResponse').textContent = JSON.stringify(response, null, 2);
+            } catch (error) {
+                document.getElementById('meResponse').textContent = `Error: ${error.message}`;
+                document.getElementById('meResponse').classList.add('error');
+            }
+        });
+
+        document.getElementById('changePasswordForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const oldPassword = document.getElementById('oldPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            try {
+                const response = await callApi('POST', '/auth/change-password', { old_password: oldPassword, new_password: newPassword }, true);
+                document.getElementById('changePasswordResponse').textContent = JSON.stringify(response, null, 2);
+            } catch (error) {
+                document.getElementById('changePasswordResponse').textContent = `Error: ${error.message}`;
+                document.getElementById('changePasswordResponse').classList.add('error');
+            }
+        });
+
+
+        // --- Market Data ---
+
+        document.getElementById('getBinanceTime').addEventListener('click', async () => {
+            try {
+                const response = await callApi('GET', '/markets/time');
+                document.getElementById('marketDataResponse').textContent = JSON.stringify(response, null, 2);
+            } catch (error) {
+                document.getElementById('marketDataResponse').textContent = `Error: ${error.message}`;
+                document.getElementById('marketDataResponse').classList.add('error');
+            }
+        });
+
+        document.getElementById('getExchangeInfo').addEventListener('click', async () => {
+            try {
+                const response = await callApi('GET', '/markets/exchange-info');
+                document.getElementById('marketDataResponse').textContent = JSON.stringify(response, null, 2);
+            } catch (error) {
+                document.getElementById('marketDataResponse').textContent = `Error: ${error.message}`;
+                document.getElementById('marketDataResponse').classList.add('error');
+            }
+        });
+
+        document.getElementById('getTickerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const symbol = document.getElementById('tickerSymbol').value;
+            try {
+                const response = await callApi('GET', `/markets/tickers/${symbol}`);
+                document.getElementById('tickerResponse').textContent = JSON.stringify(response, null, 2);
+            } catch (error) {
+                document.getElementById('tickerResponse').textContent = `Error: ${error.message}`;
+                document.getElementById('tickerResponse').classList.add('error');
+            }
+        });
+
+
+        // --- Binance Portfolio ---
+
+        document.getElementById('createBinanceCredentialsForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const apiKey = document.getElementById('binanceApiKey').value;
+            const secretKey = document.getElementById('binanceSecretKey').value;
+            try {
+                const response = await callApi('POST', '/markets/binance-credentials', { api_key: apiKey, secret_key: secretKey }, true);
+                document.getElementById('binanceCredentialsResponse').textContent = JSON.stringify(response, null, 2);
+            } catch (error) {
+                document.getElementById('binanceCredentialsResponse').textContent = `Error: ${error.message}`;
+                document.getElementById('binanceCredentialsResponse').classList.add('error');
+            }
+        });
+
+        document.getElementById('updateBinanceCredentialsForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const apiKey = document.getElementById('updateBinanceApiKey').value;
+            const secretKey = document.getElementById('updateBinanceSecretKey').value;
+            try {
+                const response = await callApi('PUT', '/markets/binance-credentials', { api_key: apiKey, secret_key: secretKey }, true);
+                document.getElementById('binanceCredentialsResponse').textContent = JSON.stringify(response, null, 2);
+            } catch (error) {
+                document.getElementById('binanceCredentialsResponse').textContent = `Error: ${error.message}`;
+                document.getElementById('binanceCredentialsResponse').classList.add('error');
+            }
+        });
+
+        document.getElementById('getBinanceBalance').addEventListener('click', async () => {
+            try {
+                const response = await callApi('GET', '/markets/balance', null, true);
+                document.getElementById('binanceBalanceResponse').textContent = JSON.stringify(response, null, 2);
+            } catch (error) {
+                document.getElementById('binanceBalanceResponse').textContent = `Error: ${error.message}`;
+                document.getElementById('binanceBalanceResponse').classList.add('error');
+            }
+        });
+
+    </script>
+</body>
+</html>
