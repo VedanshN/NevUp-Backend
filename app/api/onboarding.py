@@ -1,3 +1,4 @@
+'''anter the onboarding questions for a user'''
 from datetime import timedelta
 from uuid import uuid4
 
