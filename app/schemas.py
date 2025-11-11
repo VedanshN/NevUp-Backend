@@ -7,6 +7,31 @@ class UserBase(BaseModel):
     username: str
     email: EmailStr
     DateofBirth: str
+    onboarding_completed: bool = False
+
+
+class OnboardingBase(BaseModel):
+    trade_frequency: str
+    trade_amount: int
+    trade_type: str
+    trade_time: str
+    trade_profit: int
+    
+
+class OnboardingCreate(OnboardingBase):
+    pass
+
+
+class OnboardingInDBBase(OnboardingBase):
+    id: Optional[int] = None
+    user_id: str
+
+    class Config:
+        from_attributes = True
+
+
+class Onboarding(OnboardingInDBBase):
+    pass
 
 
 class UserCreate(UserBase):
@@ -91,6 +116,5 @@ class UserBinanceCredentialsInDBBase(UserBinanceCredentialsBase):
         from_attributes = True
 
 
-class UserBinanceCredentials(UserBinanceCredentialsInDBBase):
+class UserBinanceCredentialsResponse(UserBinanceCredentialsInDBBase):
     pass
-

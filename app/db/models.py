@@ -1,5 +1,5 @@
 
-from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy import Column, Integer, String, ForeignKey, Boolean
 from sqlalchemy.orm import relationship
 from app.db.base_class import Base
 
@@ -9,10 +9,22 @@ class User(Base):
     email = Column(String, unique=True, index=True, nullable=False)
     DateofBirth = Column(String, nullable=False)
     password = Column(String, nullable=False)
+    onboarding_completed = Column(Boolean, default=False)
 
     # Relationship to Binance credentials
     binance_credentials = relationship("UserBinanceCredentials", back_populates="user", uselist=False)
+    onboarding_data = relationship("Onboarding", back_populates="user", uselist=False)
 
+class Onboarding(Base):
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(String, ForeignKey("user.id"), unique=True, nullable=False)
+    trade_frequency = Column(String, nullable=False)
+    trade_amount = Column(Integer, nullable=False)
+    trade_type = Column(String, nullable=False)
+    trade_time = Column(String, nullable=False)
+    trade_profit = Column(Integer, nullable=False)
+
+    user = relationship("User", back_populates="onboarding_data")
 
 class UserBinanceCredentials(Base):
     id = Column(Integer, primary_key=True, index=True)
