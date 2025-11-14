@@ -18,3 +18,9 @@ async def get_classifier_data(
     if not onboarding_data:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Onboarding data not found for the user.")
     return onboarding_data   
+
+
+@router.get("/classifierusers", response_model=list[User], tags=["ml"])
+async def classifier_users():
+    return None
+    # Placeholder for future implementation

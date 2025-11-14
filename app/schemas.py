@@ -17,6 +17,10 @@ class OnboardingBase(BaseModel):
     trade_time: str
     trade_profit: int
     
+class nudgesBase(BaseModel):
+    nudge_type: str
+    nudge_message: str
+    timestamp: str
 
 class OnboardingCreate(OnboardingBase):
     pass

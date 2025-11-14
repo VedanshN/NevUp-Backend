@@ -26,6 +26,14 @@ class Onboarding(Base):
 
     user = relationship("User", back_populates="onboarding_data")
 
+class nudges(Base):
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(String, ForeignKey("user.id"), unique=True, nullable=False)
+    nudge_type = Column(String, nullable=False)
+    nudge_message = Column(String, nullable=False)
+    timestamp = Column(String, nullable=False)
+    user = relationship("User")
+
 class UserBinanceCredentials(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(String, ForeignKey("user.id"), unique=True, nullable=False)
