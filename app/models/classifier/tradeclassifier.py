@@ -1,6 +1,18 @@
 import torch
 import torch.nn as nn
 
+BATCH_SIZE = 32
+EPOCHS = 1000
+MAX_SEQ_LEN = 40            # clip or pad sequences to this length
+EMBED_DIM = 64              # stock embedding dim
+SIDE_EMB = 8                # buy/sell embedding dim
+TRADE_FEAT_DIM = 9          # number of numeric features per trade
+TRADE_EMB_DIM = 128
+LSTM_HIDDEN = 128
+NUM_CLASSES = 5
+LR = 1e-4
+PATIENCE = 10   
+
 class TradeLSTMClassifier(nn.Module):
     def __init__(self, stock_vocab_size, trade_feat_dim=TRADE_FEAT_DIM,
                  stock_emb_dim=EMBED_DIM, side_emb_dim=SIDE_EMB,
