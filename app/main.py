@@ -37,10 +37,3 @@ async def startup_event():
 async def shutdown_event():
     await close_redis_client()
 
-# Mount static files for the frontend
-app.mount("/", StaticFiles(directory="./", html=True), name="static") # Serve index.html from project root
-
-# Removed the root endpoint as it will be handled by index.html
-# @app.get("/")
-# async def root():
-#     return {"message": "Hello NevUp!"}

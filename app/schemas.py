@@ -122,3 +122,15 @@ class UserBinanceCredentialsInDBBase(UserBinanceCredentialsBase):
 
 class UserBinanceCredentialsResponse(UserBinanceCredentialsInDBBase):
     pass
+
+class TradeData(BaseModel):
+    id: str
+    timestamp: int
+    datetime: str
+    symbol: str
+    type: Optional[str] = None
+    side: str
+    price: float
+    amount: float
+    cost: float
+    fee: Optional[dict] = None
