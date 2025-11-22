@@ -55,7 +55,7 @@ from app.db.models import User as DBUser, Onboarding as DBOnboarding
 from app.schemas import OnboardingCreate, User, TradeData # Import TradeData
 
 
-# Placeholder for stock_id mapping. In a real application, this would be dynamic.
+
 STOCK_ID_MAP = {f'STOCK_{i}': i for i in range(1000)} # Example mapping
 
 
@@ -118,19 +118,8 @@ async def get_nudge(
     if nudge_model is None:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Nudge model not loaded.")
 
-    # Convert trade_history into a format usable by NudgeExcessEnv to create an observation
-    # This will involve creating a 'session' dictionary similar to how it's done in rl.py
-    # For demonstration, we'll use a placeholder for observation
-    
-    # You'll need to implement the logic to convert `trade_history` into a `session` object
-    # that `NudgeExcessEnv` can use to generate an observation.
-    # This would involve creating a pandas DataFrame from trade_history and then calling
-    # a function similar to `build_sessions_with_excess` from `rl.py` to get a session.
-    
-    # Placeholder for observation
-    # For now, let's assume we can generate a dummy observation
-    # In a real scenario, you'd create a NudgeExcessEnv instance with the user's data
-    # and then call its _make_obs method.
+    # The following logic converts `trade_history` into a session object suitable
+    # for NudgeExcessEnv and generates an observation for the model.
     
     # Convert TradeData list to a pandas DataFrame
     trade_df = pd.DataFrame([trade.dict() for trade in trade_history])
