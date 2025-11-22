@@ -20,65 +20,22 @@ SEED = 42
 random.seed(SEED)
 np.random.seed(SEED)
 
-CSV_PATH = "classification_data/synthetic_trade_sequences_planned.csv"
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+CSV_PATH = os.path.join(BASE_DIR, "synthetic_trade_sequences_planned", "synthetic_trade_sequences_planned.csv")
 MAX_HISTORY_TRADES = 10
 ARCHES = ["revenge","fomo","herd","disciplined","overconfident"]
 NUDGES = ["dont_hesitate","calm_down","take_a_second","alert_stop"]
 NUM_ACTIONS = len(NUDGES)
 
 
-# ---------- small CSV generator (if missing) ----------
-def generate_small_csv(path, n_sessions=1000):
-    ARCHETYPES = ARCHES
-    rows = []
-    seq_id = 0
-    for _ in range(n_sessions):
-        seq_id += 1
-        archetype = random.choice(ARCHETYPES)
-        planned_max = {"revenge":20,"fomo":18,"herd":12,"disciplined":6,"overconfident":22}[archetype]
-        actual_len = max(1, int(np.round(np.random.normal(planned_max * (0.9 if archetype=="disciplined" else 1.1), scale=max(1, planned_max*0.4)))))
-        actual_len = min(max(actual_len, 1), planned_max + 30)
-        start_price = round(np.random.uniform(20, 400),2)
-        prices = [start_price]
-        for i in range(actual_len+1):
-            prices.append(max(0.01, prices[-1] * (1 + np.random.normal(0, 0.02))))
-        last_ts = datetime(2025,1,1) + timedelta(days=random.randint(0,365))
-        for i in range(actual_len):
-            price = round(prices[i],2)
-            next_price = round(prices[i+1],2)
-            side = "BUY" if random.random() < 0.55 else "SELL"
-            qty = int(np.random.choice([5,10,20]) * np.random.uniform(0.7,2.5))
-            pnl = round((next_price - price) * (1 if side=="BUY" else -1) * qty, 2)
-            time_delta = int(np.random.exponential(scale=600))
-            last_ts = last_ts + timedelta(seconds=time_delta)
-            rows.append({
-                "sequence_id": seq_id,
-                "archetype": archetype,
-                "trade_idx": i+1,
-                "timestamp": last_ts.isoformat(),
-                "stock": random.choice(["AAPL","TSLA","NVDA","AMZN"]),
-                "side": side,
-                "qty": qty,
-                "entry_price": price,
-                "exit_price": next_price,
-                "pnl": pnl,
-                "position_size": round(qty*price,2),
-                "leverage": round(np.random.uniform(1.0,3.0),2),
-                "time_since_prev_sec": time_delta,
-                "planned_max_trades": planned_max,
-                "actual_trades_in_session": actual_len,
-                "label": archetype
-            })
-    df = pd.DataFrame(rows)
-    df.to_csv(path, index=False)
-    print(f"Generated {len(df)} rows to {path}")
-    return df
 
 # ---------- load data & build sessions (filter only sessions with excess trades) ----------
 if os.path.exists(CSV_PATH):
+    print("here")
     df = pd.read_csv(CSV_PATH, parse_dates=["timestamp"])
 else:
-    df = generate_small_csv(CSV_PATH, n_sessions=1200)
+    print("not file")
+    quit()
 
 def build_sessions_with_excess(df):
     sessions = []
@@ -219,7 +176,7 @@ class NudgeExcessEnv(gym.Env):
         obs = np.concatenate([trade_feats, sess_feats, arche_onehot], axis=0)
         return obs
 
-
+'''
 # ---------- training helper (fix net_arch format to dict) ----------
 def train_agent(env, timesteps=100000):
     venv = DummyVecEnv([lambda: env])
@@ -292,3 +249,4 @@ for i, r in enumerate(res[:10]):
     print(i, r)
 model.save("ppo_nudge_excess_model_gymnasium")
 print("Saved model ppo_nudge_excess_model_gymnasium")
+'''

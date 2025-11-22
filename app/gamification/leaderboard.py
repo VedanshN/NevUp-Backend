@@ -1,7 +1,7 @@
 # app/gamification/leaderboard.py
 import enum
 from typing import Literal, List
-import aioredis
+import redis.asyncio as aioredis
 from sqlalchemy import update, select
 from sqlalchemy.ext.asyncio import AsyncSession
 

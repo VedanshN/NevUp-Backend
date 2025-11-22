@@ -1,6 +1,7 @@
 
 from typing import Optional
 from pydantic import BaseModel, EmailStr
+from datetime import datetime
 
 
 class UserBase(BaseModel):
@@ -124,13 +125,17 @@ class UserBinanceCredentialsResponse(UserBinanceCredentialsInDBBase):
     pass
 
 class TradeData(BaseModel):
-    id: str
-    timestamp: int
-    datetime: str
-    symbol: str
-    type: Optional[str] = None
-    side: str
-    price: float
-    amount: float
-    cost: float
-    fee: Optional[dict] = None
+    trade_idx: int
+    timestamp: datetime
+    stock: str
+    side: str  # "BUY" or "SELL"
+
+    qty: float
+    entry_price: float
+    exit_price: float
+    pnl: float
+    position_size: float
+    leverage: float
+    time_since_prev_sec: float
+    planned_max_trades: int
+    actual_trades_in_session: int
