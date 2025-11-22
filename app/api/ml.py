@@ -176,6 +176,12 @@ async def classify_trades(trade_data: list[TradeData]):
 
 @router.post("/get_nudge", tags=["ml"])
 async def get_nudge(trade_history: list[TradeData]):
+    """
+    Accepts a list of trades (one sequence / session) in the classifier format.
+    Uses the *count* of trades as actual_trades (IGNORES any 'actual_trades_in_session' value
+    provided in the input).
+    Returns a single nudge chosen by the RL policy.
+    """
     if nudge_model is None:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Nudge model not loaded.")
     if nudge_env is None:
@@ -188,7 +194,7 @@ async def get_nudge(trade_history: list[TradeData]):
     if not trade_history:
         trade_df = pd.DataFrame(
             columns=[
-                "trade_idx","timestamp","stock","side","qty","entry_price","exit_price",
+                "sequence_id","trade_idx","timestamp","stock","side","qty","entry_price","exit_price",
                 "pnl","position_size","leverage","time_since_prev_sec",
                 "planned_max_trades","actual_trades_in_session","label"
             ]
@@ -201,7 +207,7 @@ async def get_nudge(trade_history: list[TradeData]):
     if "timestamp" in trade_df.columns and not trade_df["timestamp"].isnull().all():
         trade_df["timestamp"] = pd.to_datetime(trade_df["timestamp"], errors="coerce")
     else:
-        # if no timestamp, create synthetic increasing timestamps spaced by 1 second
+        # synthetic increasing timestamps spaced by 1s if missing
         trade_df["timestamp"] = pd.to_datetime("now") + pd.to_timedelta(np.arange(len(trade_df)), unit="s")
 
     # ensure numeric columns exist (fill missing with 0)
@@ -217,21 +223,14 @@ async def get_nudge(trade_history: list[TradeData]):
     else:
         trade_df["trade_idx"] = trade_df["trade_idx"].astype(int)
 
-    # ensure planned_max_trades column exists and is int (take first value if present)
+    # ---- planned_max_trades: prefer input value if present, else fallback to session length ----
     if "planned_max_trades" in trade_df.columns and not trade_df["planned_max_trades"].isnull().all():
         planned_val = int(trade_df["planned_max_trades"].iloc[0])
     else:
-        # fallback: if available, try `actual_trades_in_session` or length of history
-        if "actual_trades_in_session" in trade_df.columns and not trade_df["actual_trades_in_session"].isnull().all():
-            planned_val = int(trade_df["actual_trades_in_session"].iloc[0])
-        else:
-            planned_val = max(1, len(trade_df))  # default to session length
+        planned_val = max(1, len(trade_df))  # default to session length if missing
 
-    # actual trades (prefer explicit column, else length)
-    if "actual_trades_in_session" in trade_df.columns and not trade_df["actual_trades_in_session"].isnull().all():
-        actual_val = int(trade_df["actual_trades_in_session"].iloc[0])
-    else:
-        actual_val = int(len(trade_df))
+    # ---- actual_trades: ALWAYS count trades from the dataframe (ignore any input 'actual_trades_in_session') ----
+    actual_val = int(len(trade_df))
 
     # ensure label/archetype (optional)
     if "label" in trade_df.columns and not trade_df["label"].isnull().all():
@@ -246,38 +245,35 @@ async def get_nudge(trade_history: list[TradeData]):
 
     # compute pnl if missing but entry/exit exist
     if ("pnl" not in trade_df.columns) or trade_df["pnl"].isnull().all():
-        # simple pnl estimate: (exit - entry) * qty (if exists)
         trade_df["pnl"] = (trade_df["exit_price"].fillna(0.0) - trade_df["entry_price"].fillna(0.0)) * trade_df["qty"].fillna(0.0)
 
-    # sort by trade_idx (chronological model used in env)
+    # sort by trade_idx (chronological)
     trade_df = trade_df.sort_values("trade_idx").reset_index(drop=True)
 
     # ---- split history vs excess using planned_val ----
-    # history = trades up to planned_val (<= planned), excess = trades after planned_val
     history_df = trade_df[trade_df["trade_idx"] <= planned_val].copy().reset_index(drop=True)
     if history_df.shape[0] == 0:
-        # if nothing <= planned, fallback to the first MAX_HISTORY_TRADES rows as history
-        history_df = trade_df.head(MAX_HISTORY_TRADES).copy().reset_index(drop=True)
+        history_df = trade_df.head(max_history).copy().reset_index(drop=True)
 
     excess_df = trade_df[trade_df["trade_idx"] > planned_val].copy().reset_index(drop=True)
     baseline_excess_pnl = float(excess_df["pnl"].sum()) if excess_df.shape[0] > 0 else 0.0
 
-    # trim history to MAX_HISTORY_TRADES (keep most recent trades)
+    # trim history to max_history (keep most recent trades)
     if history_df.shape[0] > max_history:
         history_df = history_df.tail(max_history).reset_index(drop=True)
 
     # ---- build session dict expected by NudgeExcessEnv ----
     session_for_nudge = {
-        "sequence_id": int(trade_df["trade_idx"].min()) if len(trade_df) > 0 else 1,
+        "sequence_id": int(trade_df["sequence_id"].min()) if "sequence_id" in trade_df.columns and len(trade_df)>0 else (int(trade_df["trade_idx"].min()) if len(trade_df)>0 else 1),
         "archetype": archetype,
         "planned_max_trades": int(planned_val),
-        "actual_trades": int(actual_val),
+        "actual_trades": int(actual_val),   # <-- NOW computed as count of trades
         "history_df": history_df.reset_index(drop=True),
         "excess_df": excess_df.reset_index(drop=True),
         "baseline_excess_pnl": float(baseline_excess_pnl)
     }
 
-    # set env current session and compute observation
+    # ---- set env current session and compute observation ----
     nudge_env.curr = session_for_nudge
     obs = nudge_env._make_obs(session_for_nudge)
 
@@ -287,12 +283,14 @@ async def get_nudge(trade_history: list[TradeData]):
     else:
         obs = obs.astype(np.float32)
 
-    # predict action
+    # ---- predict action with RL model ----
     action_raw, _states = nudge_model.predict(obs, deterministic=True)
     if isinstance(action_raw, (list, tuple, np.ndarray)):
         action = int(np.asarray(action_raw).flatten()[0])
     else:
         action = int(action_raw)
+
+    # safety clamp + mapping to nudge label
     action = max(0, min(action, len(NUDGES)-1))
     nudge_action = NUDGES[action]
 
