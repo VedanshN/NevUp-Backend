@@ -8,7 +8,7 @@ from typing import Optional
 
 from app.api.deps import get_current_user, get_async_db
 from app.db.models import UserBinanceCredentials, User
-from app.schemas import UserBinanceCredentialsCreate, UserBinanceCredentials as UserBinanceCredentialsSchema, UserBinanceCredentialsResponse
+from app.schemas import UserBinanceCredentialsCreate, UserBinanceCredentialsInDBBase as UserBinanceCredentialsSchema, UserBinanceCredentialsResponse
 
 router = APIRouter()
 
