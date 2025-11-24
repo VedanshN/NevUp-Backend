@@ -1,12 +1,12 @@
-
-FROM python:3.9-slim-buster
+FROM python:3.11-slim
 
 WORKDIR /app
 
-COPY ./requirements.txt /app/requirements.txt
-
-RUN pip install -r /app/requirements.txt
+COPY pyproject.toml poetry.lock* /app/
+RUN pip install --no-cache-dir poetry && poetry install --no-root
 
 COPY . /app
+
+ENV PYTHONPATH=/app
 
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
