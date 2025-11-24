@@ -1,0 +1,31 @@
+
+version: "3.9"
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - .env.test
+    depends_on:
+      - db
+      - redis
+    command: ["pytest", "-q", "--disable-warnings"]
+    volumes:
+      - .:/app  # Mount code to allow live code use inside container
+
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: nevup_test
+      POSTGRES_USER: testuser
+      POSTGRES_PASSWORD: testpass
+    ports:
+      - "5433:5432"  # Optional: expose port externally
+
+  redis:
+    image: redis:7
+    ports:
+      - "6380:6379"  # Optional: expose port externally
+
