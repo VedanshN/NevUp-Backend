@@ -135,7 +135,7 @@ Here are the main API endpoints provided by this backend:
     *   **Request Body:** `UserCreate` (username, email, DateofBirth, password)
     *   **Response:** `User` object (excluding password hash)
 *   **`POST /auth/signin`**
-    *   **Description:** Authenticate a user and return the user object (your added endpoint).
+    *   **Description:** Authenticate a user and return the user object.
     *   **Request Body:** form-data with `username` and `password`
     *   **Response:** `User` object
 *   **`POST /auth/token`**
@@ -169,6 +169,14 @@ Here are the main API endpoints provided by this backend:
     *   **Requires:** Bearer Token in `Authorization` header.
     *   **Request Body:** `UserBinanceCredentialsCreate` (api_key, secret_key)
     *   **Response:** Updated `UserBinanceCredentials` object (excluding secret_key)
+*   **`DELETE /markets/binance-credentials`**
+    *   **Description:** Deletes the current user's Binance account credentials.
+    *   **Requires:** Bearer Token in `Authorization` header.
+    *   **Response:** `UserBinanceCredentialsResponse` object (id, user_id, api_key)
+*   **`GET /markets/binance-credentials`**
+    *   **Description:** Retrieves the current user's Binance account credentials (excluding the secret key).
+    *   **Requires:** Bearer Token in `Authorization` header.
+    *   **Response:** `UserBinanceCredentialsResponse` object (id, user_id, api_key)
 *   **`GET /markets/time`**
     *   **Description:** Fetches the current server time from Binance using `ccxt`.
     *   **Response:** `{"serverTime": <timestamp>}`
@@ -179,7 +187,91 @@ Here are the main API endpoints provided by this backend:
     *   **Description:** Fetches the current authenticated user's Binance account balance.
     *   **Requires:** Bearer Token in `Authorization` header and stored Binance API credentials.
     *   **Response:** JSON object containing the user's balance.
+*   **`GET /markets/user-trades`**
+    *   **Description:** Fetches the current user's personal Binance trade history.
+    *   **Requires:** Bearer Token in `Authorization` header and stored Binance API credentials.
+    *   **Query Parameters:** `symbol` (optional, e.g., `BTC/USDT`), `since` (optional, Unix timestamp in ms), `limit` (optional, max number of trades).
+    *   **Response:** JSON array of trade objects.
+*   **`GET /markets/user-deposits`**
+    *   **Description:** Fetches the current user's Binance deposit history.
+    *   **Requires:** Bearer Token in `Authorization` header and stored Binance API credentials.
+    *   **Query Parameters:** `asset` (optional, e.g., `USDT`), `since` (optional, Unix timestamp in ms), `limit` (optional, max number of deposits).
+    *   **Response:** JSON array of deposit objects.
+*   **`GET /markets/user-withdrawals`**
+    *   **Description:** Fetches the current user's Binance withdrawal history.
+    *   **Requires:** Bearer Token in `Authorization` header and stored Binance API credentials.
+    *   **Query Parameters:** `asset` (optional, e.g., `USDT`), `since` (optional, Unix timestamp in ms), `limit` (optional, max number of withdrawals).
+    *   **Response:** JSON array of withdrawal objects.
+*   **`GET /markets/asset-details/{asset_code}`**
+    *   **Description:** Fetches detailed information for a specific asset from Binance, including network, fees, etc.
+    *   **Requires:** Bearer Token in `Authorization` header and stored Binance API credentials.
+    *   **Path Parameter:** `asset_code` (e.g., `BTC`).
+    *   **Response:** JSON object containing asset details.
+*   **`GET /markets/trades/{symbol}`**
+    *   **Description:** Fetches recent trades for a specific symbol from Binance using `ccxt`.
+    *   **Path Parameter:** `symbol` (e.g., `BTC/USDT`).
+    *   **Response:** JSON array of trade objects.
 *   **`GET /markets/tickers/{symbol}`**
-    *   **Description:** Fetches ticker information for a specific symbol (e.g., BTC/USDT) from Binance using `ccxt`.
-    *   **Path Parameter:** `symbol` (e.g., `BTC/USDT`)
+    *   **Description:** Fetches ticker information for a specific symbol from Binance using `ccxt`.
+    *   **Path Parameter:** `symbol` (e.g., `BTC/USDT`).
     *   **Response:** JSON object containing ticker information for the specified symbol.
+
+### Machine Learning Endpoints (`/ml`)
+
+*   **`GET /ml/classifierdata`**
+    *   **Description:** Retrieves synthetic trade sequences data for the classifier model.
+    *   **Response:** JSON array of trade data objects.
+*   **`GET /ml/classifierusers`**
+    *   **Description:** Returns a list of users for classifier related tasks.
+    *   **Response:** `list[User]`
+*   **`POST /ml/classifytrades`**
+    *   **Description:** Classifies a sequence of trades into an archetype (e.g., "revenge", "fomo").
+    *   **Request Body:** `list[TradeData]` (list of trade objects for one trading session)
+    *   **Response:** `{"sequence_length": int, "prediction_id": int, "prediction_label": str}`
+*   **`POST /ml/get_nudge`**
+    *   **Description:** Accepts a list of trades (one sequence/session) and returns a single nudge chosen by the RL policy.
+    *   **Request Body:** `list[TradeData]`
+    *   **Response:** `{"nudge": str, "action_id": int, "planned_max_trades": int, "actual_trades": int, "baseline_excess_pnl": float, "message": str}`
+
+### Nudge Endpoints (`/nudge`)
+
+*   **`GET /nudge/nudgedata`**
+    *   **Description:** Retrieves nudge data for the current authenticated user.
+    *   **Requires:** Bearer Token in `Authorization` header.
+    *   **Response:** `Nudge` object
+
+### Onboarding Endpoints (`/onboarding`)
+
+*   **`POST /onboarding`**
+    *   **Description:** Completes the onboarding process for the current authenticated user.
+    *   **Requires:** Bearer Token in `Authorization` header.
+    *   **Request Body:** `OnboardingCreate` (trade_frequency, trade_amount, trade_type, trade_time, trade_profit)
+    *   **Response:** `User` object (with `onboarding_completed` set to True)
+*   **`PUT /onboarding`**
+    *   **Description:** Updates the onboarding data for the current authenticated user.
+    *   **Requires:** Bearer Token in `Authorization` header.
+    *   **Request Body:** `OnboardingCreate`
+    *   **Response:** `User` object
+*   **`GET /onboarding`**
+    *   **Description:** Retrieves the onboarding data for the current authenticated user.
+    *   **Requires:** Bearer Token in `Authorization` header.
+    *   **Response:** `Onboarding` object
+
+### Gamification Endpoints (`/gamification`)
+
+*   **`POST /gamification/events/followed_nudge`**
+    *   **Description:** Awards points to the user for following a nudge.
+    *   **Requires:** Bearer Token in `Authorization` header.
+    *   **Response:** `{"message": "Points awarded for following nudge.", "points_awarded": int}`
+*   **`POST /gamification/events/avoided_impulsive`**
+    *   **Description:** Awards points to the user for avoiding an impulsive trade.
+    *   **Requires:** Bearer Token in `Authorization` header.
+    *   **Response:** `{"message": "Points awarded for avoiding impulsive trade.", "points_awarded": int}`
+*   **`GET /gamification/leaderboard`**
+    *   **Description:** Retrieves the top N users on the leaderboard.
+    *   **Query Parameter:** `n` (optional, default: 10)
+    *   **Response:** `{"leaderboard": list[dict]}`
+*   **`GET /gamification/me/points`**
+    *   **Description:** Retrieves the current authenticated user's rank and score on the leaderboard.
+    *   **Requires:** Bearer Token in `Authorization` header.
+    *   **Response:** `{"rank": int, "score": int}`
