@@ -5,10 +5,7 @@ from uuid import uuid4
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-
 from app.api.deps import get_current_user, get_async_db
-from app.core.config import settings
-from app.core.security import create_access_token, verify_password, get_password_hash
 from app.db.models import User as DBUser, Onboarding as DBOnboarding
 from app.schemas import UserCreate, User, Token, PasswordChange, UserUpdate, OnboardingCreate
 
