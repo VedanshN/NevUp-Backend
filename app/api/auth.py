@@ -26,6 +26,7 @@ router = APIRouter()
 async def signup(*, db: AsyncSession = Depends(get_async_db), user_in: UserCreate):
     result = await db.execute(select(DBUser).where(DBUser.email == user_in.email)) # Use DBUser
     user = result.scalars().first()
+    
     if user:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
     result = await db.execute(select(DBUser).where(DBUser.username == user_in.username)) # Use DBUser

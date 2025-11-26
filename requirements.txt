@@ -13,3 +13,6 @@ httpx==0.27.0
 ccxt==4.3.57
 torch
 numpy
+pandas
+stable_baselines3
+redis
