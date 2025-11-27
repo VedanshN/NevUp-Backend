@@ -10,6 +10,7 @@ class User(Base):
     DateofBirth = Column(String, nullable=False)
     password = Column(String, nullable=False)
     onboarding_completed = Column(Boolean, default=False)
+    total_points = Column(Integer, nullable=False, default=0)
 
     # Relationship to Binance credentials
     binance_credentials = relationship("UserBinanceCredentials", back_populates="user", uselist=False)
