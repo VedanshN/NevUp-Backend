@@ -18,6 +18,7 @@ origins = [
     "http://localhost:8080", # Example frontend development server
     "http://127.0.0.1:8000",
     "http://127.0.0.1:8080",
+    "http://localhost:3000",
     # Add other origins as needed, e.g., your frontend URL
 ]
 

@@ -1,13 +1,12 @@
-
 from typing import Optional
 from pydantic import BaseModel, EmailStr
-from datetime import datetime
+from datetime import datetime, date
 
 
 class UserBase(BaseModel):
     username: str
     email: EmailStr
-    DateofBirth: str
+    DateofBirth: date
     onboarding_completed: bool = False
 
 
@@ -18,10 +17,12 @@ class OnboardingBase(BaseModel):
     trade_time: str
     trade_profit: int
     
+
 class nudgesBase(BaseModel):
     nudge_type: str
     nudge_message: str
-    timestamp: str
+    timestamp: datetime
+
 
 class OnboardingCreate(OnboardingBase):
     pass
@@ -43,10 +44,10 @@ class UserCreate(UserBase):
     password: str
 
 
-class UserUpdate(UserBase):
+class UserUpdate(BaseModel):
     username: Optional[str] = None
     email: Optional[EmailStr] = None
-    DateofBirth: Optional[str] = None
+    DateofBirth: Optional[date] = None
     password: Optional[str] = None
 
 
@@ -74,7 +75,7 @@ class PasswordChange(BaseModel):
     old_password: str
     new_password: str
 
-# UserPortfolio Schemas
+
 class UserPortfolioBase(BaseModel):
     user_id: str
     asset_name: str
@@ -86,7 +87,7 @@ class UserPortfolioCreate(UserPortfolioBase):
     pass
 
 
-class UserPortfolioUpdate(UserPortfolioBase):
+class UserPortfolioUpdate(BaseModel):
     user_id: Optional[str] = None
     asset_name: Optional[str] = None
     quantity: Optional[int] = None
@@ -104,7 +105,6 @@ class UserPortfolio(UserPortfolioInDBBase):
     pass
 
 
-# Binance Credentials Schemas
 class UserBinanceCredentialsBase(BaseModel):
     api_key: str
 
@@ -124,12 +124,12 @@ class UserBinanceCredentialsInDBBase(UserBinanceCredentialsBase):
 class UserBinanceCredentialsResponse(UserBinanceCredentialsInDBBase):
     pass
 
+
 class TradeData(BaseModel):
     trade_idx: int
     timestamp: datetime
     stock: str
-    side: str  # "BUY" or "SELL"
-
+    side: str
     qty: float
     entry_price: float
     exit_price: float
